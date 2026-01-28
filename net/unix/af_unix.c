@@ -2624,7 +2624,6 @@ static int unix_stream_recv_urg(struct unix_stream_read_state *state)
 		WRITE_ONCE(u->oob_skb, NULL);
 	else
 		skb_get(oob_skb);
-
 	spin_unlock(&sk->sk_receive_queue.lock);
 	unix_state_unlock(sk);
 
