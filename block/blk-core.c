@@ -1213,6 +1213,9 @@ EXPORT_SYMBOL_GPL(blk_io_schedule);
 
 int __init blk_dev_init(void)
 {
+#ifdef CONFIG_BLK_MQ_USE_LOCAL_THREAD
+	const char *config = of_blk_feature_read("kblockd_ux_unbound_enable");
+#endif
 	BUILD_BUG_ON((__force u32)REQ_OP_LAST >= (1 << REQ_OP_BITS));
 	BUILD_BUG_ON(REQ_OP_BITS + REQ_FLAG_BITS > 8 *
 			sizeof_field(struct request, cmd_flags));
@@ -1222,6 +1225,12 @@ int __init blk_dev_init(void)
 			   __alignof__(struct request_queue)) !=
 		     sizeof(struct request_queue));
 
+#ifdef CONFIG_BLK_MQ_USE_LOCAL_THREAD
+	if (config && strcmp(config, "y") == 0)
+		kblockd_workqueue = alloc_workqueue("kblockd",
+					    WQ_MEM_RECLAIM | WQ_HIGHPRI | WQ_UX | WQ_UNBOUND, 0);
+	else
+#endif
 	/* used for unplugging and affects IO latency/throughput - HIGHPRI */
 	kblockd_workqueue = alloc_workqueue("kblockd",
 					    WQ_MEM_RECLAIM | WQ_HIGHPRI, 0);
